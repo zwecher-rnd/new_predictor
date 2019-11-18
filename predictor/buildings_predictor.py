@@ -30,7 +30,6 @@ def get_model():
     model.summary()
     return model
 
-
 def train_model(model, epochs=5):
     metadata_df = batch_manager.create_metadata_df()
     train_metadata_df = metadata_df.iloc[:-256]
@@ -40,8 +39,9 @@ def train_model(model, epochs=5):
                                          batch_size=256)
     validation_data = batch_manager.get_samples(test_metadata_df)
     model.fit_generator(generator=dg, epochs=epochs, verbose=1, validation_data=validation_data)
-    # il = get_inermediate_layers_func(model, ["conv2d"])
-    # for i in range(num_of_iterations):
+
+# il = get_inermediate_layers_func(model, ["conv2d"])
+# for i in range(num_of_iterations):
     #     obs_batch, labels_batch = bm.get_next_train_batch(batch_size=256)
     #     c1 = model.train_on_batch(obs_batch, labels_batch)
     #     logging.info(c1)

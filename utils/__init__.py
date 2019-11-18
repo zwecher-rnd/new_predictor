@@ -3,6 +3,7 @@ import sys
 import logging
 
 from tensorflow.keras import backend as K
+import numpy as np
 
 
 def set_log(level=logging.INFO, filename="info", dir=r".."):
@@ -26,3 +27,10 @@ def get_inermediate_layers_func(model, layers_name):
                layer.name in layers_name]  # all layer outputs except first (input) layer
     functor = K.function([inp], outputs)
     return functor
+
+
+def get_inermediate_layers_val(model, func, input_batch):
+    return (func(input_batch))
+
+def logits_to_probs(binary_logits_batch):
+    return np.exp(binary_logits_batch)/(1.0+np.exp(binary_logits_batch))
