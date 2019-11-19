@@ -10,9 +10,9 @@ from predictor import config, batch_manager
 from utils import get_inermediate_layers_func
 
 
-def loss(labels, logits):
-    logging.info(labels)
-    return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=labels))
+def loss(y_true, y_pred):
+    #logging.info(labels)
+    return tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=y_pred, labels=y_true))
 
 
 def get_model():

@@ -29,7 +29,7 @@ def get_inermediate_layers_func(model, layers_name):
     return functor
 
 
-def get_inermediate_layers_val(model, func, input_batch):
+def get_inermediate_layers_val(func, input_batch):
     return (func(input_batch))
 
 def logits_to_probs(binary_logits_batch):
