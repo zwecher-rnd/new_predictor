@@ -22,19 +22,6 @@ class BatchManager:
         self.test_metadata_df = metadata_df.iloc[-test_num:, :]
         self.examples_num = len(metadata_df)
 
-    @staticmethod
-    def get_samples(batch_df):
-        obs = []
-        labels = []
-        for _, row in batch_df.iterrows():
-            new_obs = np.loadtxt(row[OBS_FNAMES])
-            new_obs[new_obs == 3] = 0.5
-
-            obs.append(new_obs)
-            labels.append(np.loadtxt(row[LABELS_FNAMES]))
-        labels = np.array(labels)
-        return np.expand_dims(np.array(obs), 3), labels.reshape(labels.shape[0], -1)
-
     def get_next_train_batch(self, batch_size):
         batch_df = self.train_metadata_df.iloc[self.current_ind:self.current_ind + batch_size].copy()
         self.current_ind = (self.current_ind + batch_size)
@@ -44,7 +31,7 @@ class BatchManager:
 
     def get_test_batch(self):
         batch_df = self.test_metadata_df.copy()
-        return self.get_samples(batch_df)
+        return get_samples(batch_df)
 
 
 def create_metadata_df(obs_path=config.OBS_PATH, labels_path=config.LABELS_PATH, num_of_obs=config.NUM_OF_OBS):
@@ -71,6 +58,7 @@ class BuildingsGenrator(Sequence):
         y_series = self.y.iloc[idx * self.batch_size:(idx + 1) * self.batch_size]
         batch_df = pd.concat([x_series, y_series], axis=1)
         batch_df.columns = [OBS_FNAMES, LABELS_FNAMES]
+        # return get_samples(batch_df)
         return get_samples(batch_df)
 
 
@@ -79,9 +67,17 @@ def get_samples(batch_df):
     labels = []
     for _, row in batch_df.iterrows():
         new_obs = np.loadtxt(row[OBS_FNAMES])
-        new_obs[new_obs == 3] = 0.5
-
-        obs.append(new_obs)
-        labels.append(np.loadtxt(row[LABELS_FNAMES]))
+        base_obs = np.zeros(np.array(new_obs.shape) + 20)
+        base_labels = np.zeros(np.array(new_obs.shape) + 20)
+        x1 = np.random.randint(0, 10)
+        x2 = np.random.randint(0, 10)
+        new_obs[new_obs == 0] = -1
+        new_obs[new_obs == 3] = 0
+        base_obs[x1:-(10+x1), x2:-(10+x2)] = new_obs
+        obs.append(base_obs)
+        new_labels = np.loadtxt(row[LABELS_FNAMES])
+        base_labels[x1:-(10+x1), x2:-(10+x2)] = new_labels
+        labels.append(base_labels)
     labels = np.array(labels)
-    return np.expand_dims(np.array(obs), 3), labels.reshape(labels.shape[0], -1)
+    tmp_output = np.expand_dims(np.array(obs), 3), labels.reshape(labels.shape[0], -1)
+    return tmp_output, tmp_output[1]
