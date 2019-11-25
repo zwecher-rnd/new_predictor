@@ -46,23 +46,25 @@ def resize_image_layer(shape, name):
     return q
 
 
-def get_mask_layer(name):
-    def get_mask_func(x):
-        mask = tf.cast(tf.not_equal(x, 0.0), tf.float32)
-        proximity_mask = Conv2D(kernel_size=10, filters=1, padding="same", kernel_initializer="ones", )(mask)
-        proximity_mask2 = tf.keras.backend.greater(proximity_mask, 0.0)
-        proximity_mask3 = Flatten()(proximity_mask2)
-        return tf.cast(proximity_mask3, tf.float32)
+def get_mask_func(x):
+    mask = tf.cast(tf.not_equal(x, 0.0), tf.float32)
+    proximity_mask = Conv2D(kernel_size=10, filters=1, padding="same", kernel_initializer="ones", )(mask)
+    proximity_mask2 = tf.keras.backend.greater(proximity_mask, 0.0)
+    proximity_mask3 = Flatten()(proximity_mask2)
+    return tf.cast(proximity_mask3, tf.float32)
 
+
+def get_mask_layer(name):
     return Lambda(lambda x: get_mask_func(x), name=name, trainable=False)
 
 
-def apply_mask_layer(name):
-    def get_apply_func(x):
-        masked_loss_tmp = Multiply(name="masked_loss")([x[0], x[1]])
-        masked_loss = tf.boolean_mask(masked_loss_tmp, tf.cast(masked_loss_tmp > 0, tf.bool))
-        return masked_loss
+def get_apply_func(x):
+    masked_loss_tmp = Multiply(name="masked_loss")([x[0], x[1]])
+    masked_loss = tf.boolean_mask(masked_loss_tmp, tf.cast(masked_loss_tmp > 0, tf.bool))
+    return masked_loss
 
+
+def apply_mask_layer(name):
     return Lambda(lambda x: get_apply_func(x), name=name, trainable=False)
 
 

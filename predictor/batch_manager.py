@@ -67,16 +67,17 @@ def get_samples(batch_df):
     labels = []
     for _, row in batch_df.iterrows():
         new_obs = np.loadtxt(row[OBS_FNAMES])
-        base_obs = np.zeros(np.array(new_obs.shape) + 20)
-        base_labels = np.zeros(np.array(new_obs.shape) + 20)
-        x1 = np.random.randint(0, 10)
-        x2 = np.random.randint(0, 10)
+        base_obs = np.zeros(np.array(new_obs.shape) + 2*config.PADDING)
+        base_labels = np.zeros(np.array(new_obs.shape) + 2*config.PADDING)
+        x1 = np.random.randint(-5, 6) + config.PADDING
+        x2 = np.random.randint(-5, 6) + config.PADDING
         new_obs[new_obs == 0] = -1
         new_obs[new_obs == 3] = 0
-        base_obs[x1:-(10+x1), x2:-(10+x2)] = new_obs
+        base_obs[x1:x1 + (config.HEIGHT - 2 * config.PADDING), x2:x2 + (config.WIDTH - 2 * config.PADDING)] = new_obs
         obs.append(base_obs)
         new_labels = np.loadtxt(row[LABELS_FNAMES])
-        base_labels[x1:-(10+x1), x2:-(10+x2)] = new_labels
+        base_labels[x1:x1 + (config.HEIGHT - 2 * config.PADDING),
+        x2:x2 + (config.WIDTH - 2 * config.PADDING)] = new_labels
         labels.append(base_labels)
     labels = np.array(labels)
     tmp_output = np.expand_dims(np.array(obs), 3), labels.reshape(labels.shape[0], -1)

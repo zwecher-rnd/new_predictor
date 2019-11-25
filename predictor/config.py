@@ -1,7 +1,7 @@
 BLUR = False
 LABELS_PATH = r"D:\predictor_data\data\buildings"  # set_this
 OBS_PATH = r"D:\predictor_data\data\observations"  # set_this
-PADDING = 10
+PADDING = 15
 HEIGHT = 62 + 2 * PADDING
 WIDTH = 60 + 2 * PADDING
 DENSE = True

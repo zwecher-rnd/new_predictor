@@ -23,19 +23,17 @@ def get_model(conv_layers_num=7, kernel_size=3):
     inp = obs
     for l in range(conv_layers_num):
         conv = Conv2D(filters=25, kernel_size=kernel_size, activation="relu", name=f"conv_{l}")(inp)
-        inp = MaxPool2D(pool_size=4, strides=1, name=f"max_pool_2d_{l}")(conv)
+        if l == conv_layers_num // conv_layers_num:
+            inp = MaxPool2D(pool_size=2, strides=1, name=f"max_pool_2d_{l}")(conv)
+        else:
+            inp = conv
 
-    # first_conv = Conv2D(filters=25, kernel_size=7, activation="relu", name="first_conv")(obs)
-    # max_pool_2d_a = MaxPool2D(pool_size=4, strides=1, name = "max_pool_2d_a")(first_conv)
-    # second_conv = Conv2D(filters=25, kernel_size=7, activation="relu", name="second_conv")(max_pool_2d_a)
-    # max_pool_2d_b = MaxPool2D(pool_size=4, strides=1, name="max_pool_2d_b")(second_conv)
-    # third_conv = Conv2D(filters=25, kernel_size=7, activation="relu", name="third_conv")(max_pool_2d_b)
     last_conv = Conv2D(filters=1, kernel_size=7, name="last_conv")(inp)
-    # f = Flatten(name="f")(second_conv)
-    # logits = Dense(units=config.HEIGHT * config.WIDTH, name="logits")(f)
-    logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(last_conv)
-    logging.info(f"labels: {labels}")
-    logging.info(f"logits: {logits}")
+    flat = Flatten(name = "flat")(last_conv)
+    dense = Dense((config.HEIGHT-20)*(config.WIDTH-20), name="dense")(flat)
+    reshaped = Reshape(target_shape=(config.HEIGHT - 20, config.WIDTH - 20, 1), name="reshaped")(dense)
+
+    logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(reshaped)
     loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
     mask = utils.get_mask_layer(name="mask")(obs)
     masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
@@ -45,7 +43,7 @@ def get_model(conv_layers_num=7, kernel_size=3):
     return model
 
 
-def train_model(model, epochs=5,batch_size=64):
+def train_model(model, epochs=5, batch_size=64):
     metadata_df = batch_manager.create_metadata_df()
     train_metadata_df = metadata_df.iloc[:-batch_size]
     test_metadata_df = metadata_df.iloc[-batch_size:]
