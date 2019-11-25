@@ -23,17 +23,17 @@ def get_model(conv_layers_num=7, kernel_size=3):
     inp = obs
     for l in range(conv_layers_num):
         conv = Conv2D(filters=25, kernel_size=kernel_size, activation="relu", name=f"conv_{l}")(inp)
-        if l == conv_layers_num // conv_layers_num:
+        if l ==  conv_layers_num//2:
             inp = MaxPool2D(pool_size=2, strides=1, name=f"max_pool_2d_{l}")(conv)
         else:
             inp = conv
 
     last_conv = Conv2D(filters=1, kernel_size=7, name="last_conv")(inp)
     flat = Flatten(name = "flat")(last_conv)
-    dense = Dense((config.HEIGHT-20)*(config.WIDTH-20), name="dense")(flat)
-    reshaped = Reshape(target_shape=(config.HEIGHT - 20, config.WIDTH - 20, 1), name="reshaped")(dense)
+    dense = Dense(config.HEIGHT*config.WIDTH, name="dense")(flat)
+    #reshaped = Reshape(target_shape=(config.HEIGHT - 20, config.WIDTH - 20, 1), name="reshaped")(dense)
 
-    logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(reshaped)
+    logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH,1], name="logits")(dense)
     loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
     mask = utils.get_mask_layer(name="mask")(obs)
     masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
