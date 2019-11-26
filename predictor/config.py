@@ -1,7 +1,7 @@
 BLUR = False
 LABELS_PATH = r"D:\predictor_data\data\buildings"  # set_this
 OBS_PATH = r"D:\predictor_data\data\observations"  # set_this
-PADDING = 15
+PADDING = 16
 HEIGHT = 62 + 2 * PADDING
 WIDTH = 60 + 2 * PADDING
 DENSE = True
@@ -17,3 +17,7 @@ OBS = "obs"
 NEXT_OBS = "next_obs"
 ACTION = "action"
 REWARD = "reward"
+if HEIGHT % 8 != 0:
+    HEIGHT = HEIGHT - HEIGHT % 8 + 8
+if WIDTH % 8 != 0:
+    WIDTH = WIDTH - WIDTH % 8 + 8
