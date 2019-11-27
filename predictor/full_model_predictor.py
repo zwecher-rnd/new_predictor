@@ -17,7 +17,7 @@ def loss(y_true, y_pred):
     return tf.divide(sums, nums)
 
 
-def get_full_dense_model(conv_layers_num=3, kernel_size=3):
+def get_dense_model(conv_layers_num=9, kernel_size=3):
     ao = optimizers.Adam(learning_rate=0.001)
     logging.info(config.HEIGHT)
     obs = Input(shape=(config.HEIGHT, config.WIDTH, 1), name="obs")
@@ -25,7 +25,7 @@ def get_full_dense_model(conv_layers_num=3, kernel_size=3):
     inp = obs
     for l in range(conv_layers_num):
         conv = Conv2D(filters=25, kernel_size=kernel_size, activation="relu", name=f"conv_{l}")(inp)
-        if l == conv_layers_num - 1:
+        if l == conv_layers_num//2:
             inp = MaxPool2D(pool_size=2, strides=2, name=f"max_pool_2d_{l}")(conv)
         else:
             inp = conv
@@ -33,9 +33,6 @@ def get_full_dense_model(conv_layers_num=3, kernel_size=3):
     last_conv = Conv2D(filters=1, kernel_size=7, name="last_conv")(inp)
     flat = Flatten(name="flat")(last_conv)
     logits = Dense(config.HEIGHT * config.WIDTH, name="dense")(flat)
-    # reshaped = Reshape(target_shape=(config.HEIGHT // 2, config.WIDTH // 2, 1), name="reshaped")(dense)
-
-    # logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(dense)
     loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
     mask = utils.get_mask_layer(name="mask")(obs)
     masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
@@ -60,15 +57,8 @@ def get_conv_model(conv_layers_num=9, kernel_size=3):
     for l in range(conv_layers_num // 3):
         inp = Conv2DTranspose(filters=25, kernel_size=kernel_size, strides=2, padding="same",
                               name="trnasp_{}".format(l))(inp)
-        #logging.info(inp.get_config())
-
     last_conv = Conv2D(filters=1, kernel_size=3, padding="same", name="last_conv")(inp)
-    #logits = Flatten(name="flat")(last_conv)
     logits = Flatten(name = "flat")(last_conv)
-    #logits = Dense(config.HEIGHT * config.WIDTH, name="dense")(flat)
-    # reshaped = Reshape(target_shape=(config.HEIGHT // 2, config.WIDTH // 2, 1), name="reshaped")(dense)
-
-    # logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(dense)
     loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
     mask = utils.get_mask_layer(name="mask")(obs)
     masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
@@ -78,32 +68,32 @@ def get_conv_model(conv_layers_num=9, kernel_size=3):
     return model
 
 
-def get_model(conv_layers_num=7, kernel_size=3):
-    ao = optimizers.Adam(learning_rate=0.001)
-    logging.info(config.HEIGHT)
-    obs = Input(shape=(config.HEIGHT, config.WIDTH, 1), name="obs")
-    labels = Input(shape=(config.HEIGHT * config.WIDTH), name="lab")
-    inp = obs
-    for l in range(conv_layers_num):
-        conv = Conv2D(filters=25, kernel_size=kernel_size, activation="relu", name=f"conv_{l}")(inp)
-        if l == conv_layers_num // 2:
-            inp = MaxPool2D(pool_size=2, strides=1, name=f"max_pool_2d_{l}")(conv)
-        else:
-            inp = conv
-
-    last_conv = Conv2D(filters=1, kernel_size=7, name="last_conv")(inp)
-    flat = Flatten(name="flat")(last_conv)
-    dense = Dense((config.HEIGHT * config.WIDTH) // 4, name="dense")(flat)
-    reshaped = Reshape(target_shape=(config.HEIGHT // 2, config.WIDTH // 2, 1), name="reshaped")(dense)
-
-    logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(reshaped)
-    loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
-    mask = utils.get_mask_layer(name="mask")(obs)
-    masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
-    model = Model(inputs=[obs, labels], outputs=[masked_loss])
-    model.compile(optimizer=ao, loss=loss)
-    model.summary()
-    return model
+# def get_model(conv_layers_num=7, kernel_size=3):
+#     ao = optimizers.Adam(learning_rate=0.001)
+#     logging.info(config.HEIGHT)
+#     obs = Input(shape=(config.HEIGHT, config.WIDTH, 1), name="obs")
+#     labels = Input(shape=(config.HEIGHT * config.WIDTH), name="lab")
+#     inp = obs
+#     for l in range(conv_layers_num):
+#         conv = Conv2D(filters=25, kernel_size=kernel_size, activation="relu", name=f"conv_{l}")(inp)
+#         if l == conv_layers_num // 2:
+#             inp = MaxPool2D(pool_size=2, strides=1, name=f"max_pool_2d_{l}")(conv)
+#         else:
+#             inp = conv
+#
+#     last_conv = Conv2D(filters=1, kernel_size=7, name="last_conv")(inp)
+#     flat = Flatten(name="flat")(last_conv)
+#     dense = Dense((config.HEIGHT * config.WIDTH) // 4, name="dense")(flat)
+#     reshaped = Reshape(target_shape=(config.HEIGHT // 2, config.WIDTH // 2, 1), name="reshaped")(dense)
+#
+#     logits = utils.resize_image_layer(shape=[config.HEIGHT, config.WIDTH], name="logits")(reshaped)
+#     loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
+#     mask = utils.get_mask_layer(name="mask")(obs)
+#     masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
+#     model = Model(inputs=[obs, labels], outputs=[masked_loss])
+#     model.compile(optimizer=ao, loss=loss)
+#     model.summary()
+#     return model
 
 
 def train_model(model, epochs=5, batch_size=64):
@@ -114,7 +104,7 @@ def train_model(model, epochs=5, batch_size=64):
     dg = batch_manager.BuildingsGenrator(x_set=train_metadata_df.iloc[:, 0], y_set=train_metadata_df.iloc[:, 1],
                                          batch_size=batch_size)
     validation_data = batch_manager.get_samples(test_metadata_df)
-    filepath = r"C:\Users\zwecher\Documents\mygit\new_predictor\models\models_6260_dense_full\model-{epoch:02d}-{loss:.4f}.hdf5"
+    filepath = r"C:\Users\zwecher\Documents\mygit\new_predictor\models\models_6260_dense\model-{epoch:02d}-{loss:.4f}.hdf5"
     checkpoint = ModelCheckpoint(filepath, monitor='loss', verbose=1, save_best_only=True, mode='min')
     callbacks_list = [checkpoint]
     model.fit_generator(generator=dg, epochs=epochs, verbose=1, validation_data=validation_data,
@@ -129,10 +119,3 @@ def get_layers_vals(model):
                                                      "masked_loss"])
     obs, last_conv, logits, loss_for_logits, labels, mask, masked_loss = func((x_test, y_test))
     return obs, last_conv, logits, loss_for_logits, labels, mask, masked_loss
-
-
-if __name__ == "__main__":
-    K.clear_session()
-    model = get_model()
-    train_model(model, 1, batch_size=64)
-    model = get_model()
