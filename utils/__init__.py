@@ -40,6 +40,10 @@ def logits_to_probs(binary_logits_batch):
     return np.exp(binary_logits_batch) / (1.0 + np.exp(binary_logits_batch))
 
 
+def logits_to_probs_layers(name):
+    return Lambda(lambda x: tf.math.exp(x) / (tf.math.exp(x) + 1.0), name=name)
+
+
 def resize_image_layer(shape, name):
     q = Lambda(lambda x: Flatten()(tf.image.resize(x, shape, method=tf.image.ResizeMethod.BICUBIC)),
                name=name)

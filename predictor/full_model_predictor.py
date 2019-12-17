@@ -42,11 +42,10 @@ def get_dense_model(conv_layers_num=9, kernel_size=3):
     return model
 
 
-def get_conv_model(conv_layers_num=9, kernel_size=3):
+def get_conv_model(conv_layers_num=9, kernel_size=3, height=config.HEIGHT, width=config.WIDTH):
     ao = optimizers.Adam(learning_rate=0.001)
-    logging.info(config.HEIGHT)
-    obs = Input(shape=(config.HEIGHT, config.WIDTH, 1), name="obs")
-    labels = Input(shape=(config.HEIGHT * config.WIDTH), name="lab")
+    obs = Input(shape=(height, width, 1), name="obs")
+    labels = Input(shape=(height * width), name="lab")
     inp = obs
     for l in range(conv_layers_num):
         conv = Conv2D(filters=25, kernel_size=kernel_size, padding="same", activation="relu", name=f"conv_{l}")(inp)
@@ -62,7 +61,7 @@ def get_conv_model(conv_layers_num=9, kernel_size=3):
     loss_for_logits = utils.sigmoid_cross_entropy_with_logits_layer(name="loss_for_logits")([labels, logits])
     mask = utils.get_mask_layer(name="mask")(obs)
     masked_loss = Multiply(name="masked_loss")([loss_for_logits, mask])
-    model = Model(inputs=[obs, labels], outputs=[masked_loss])
+    model = Model(inputs=[obs, labels], outputs=[logits,masked_loss])
     model.compile(optimizer=ao, loss=loss)
     model.summary()
     return model

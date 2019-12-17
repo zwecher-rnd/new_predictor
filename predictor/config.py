@@ -1,6 +1,9 @@
 BLUR = False
 LABELS_PATH = r"D:\predictor_data\data\buildings_global"  # set_this
+#LABELS_PATH = r"D:\predictor_data\data\tmp_buildings"
 OBS_PATH = r"D:\predictor_data\data\observations_global"  # set_this
+#OBS_PATH = r"D:\predictor_data\data\tmp_obs"
+
 PADDING = 16
 HEIGHT = 80
 WIDTH = 80
